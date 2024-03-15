@@ -185,46 +185,41 @@ impl std::ops::Add for Number {
             .max(rhs.length_without_leading_zeroes());
 
         let (mut a, mut b) = (self.max(&rhs), self.min(&rhs));
+
+        while b.body.len() < max_length {
+            b.body.push(0);
+        }
+
         let mut positive = true;
         let mut subtract = false;
-        if !a.positive && !b.positive {
-            positive = false;
-            subtract = false;
-        } else if a.positive && !b.positive {
-            subtract = true;
-        } else if !a.positive && b.positive {
-            (a, b) = (b, a);
-            subtract = true;
-        } else { // Both positive
-        }
 
         match (a.positive, b.positive) {
             (false, false) => {
                 positive = false;
-                subtract = false;
             }
             (true, false) => {
-                subtract = true;
+                panic!("A is not bigger than B");
             }
             (false, true) => {
-                (a, b) = (b, a);
                 subtract = true;
             }
-            (true, true) => { 
+            (true, true) => {
                 positive = true;
-                subtract = false;
             }
         }
 
         let mut carry = 0;
         let mut body = Vec::new();
+
+        if subtract {
+            return a - b;
+        }
+
         for i in 0..max_length {
             let mut result = (a[i] as i16) + (b[i] as i16) + carry;
-            let mut result = match subtract {
-                
-            }
-            if result > u8::MAX as i16 {
-                result = result - 256;
+            carry = 0;
+            if result > u8::max as i16 {
+                result -= 256;
                 carry = 1;
             }
             let result = result as u8;
@@ -234,17 +229,30 @@ impl std::ops::Add for Number {
             body.push(carry as u8);
         }
 
-        Number {
-            body,
-            positive: true,
-        }
+        Number { body, positive }
     }
 
     type Output = Self;
 }
 
 impl std::ops::Sub for Number {
-    fn sub(self, _rhs: Self) -> Self::Output {self}
+    fn sub(self, rhs: Self) -> Self::Output {
+        let max_length = self.length_without_leading_zeroes().max(rhs.length_without_leading_zeroes());
+
+        let mut carry = 0;
+        let mut body = Vec::new();
+        let mut positive = false;
+        for i in 0..max_length {
+            let mut result = (self[i] as i16) - (rhs[i] as i16) + carry;
+            let result = result as u8;
+            body.push(result)
+        }
+
+        Number {
+            body,
+            positive,
+        }
+    }
 
     type Output = Self;
 }
