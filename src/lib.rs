@@ -1,4 +1,4 @@
-use std::fmt::Write;
+use std::{fmt::Write, ops::Index};
 
 #[derive(Clone)]
 pub struct Number {
@@ -16,23 +16,27 @@ impl Number {
 
     pub fn max(&self, other: &Self) -> Self {
         if self >= other {
-            return self.clone()
+            return self.clone();
         } else {
-            return other.clone()
+            return other.clone();
         }
     }
 
     pub fn min(&self, other: &Self) -> Self {
         if self <= other {
-            return self.clone()
+            return self.clone();
         } else {
-            return other.clone()
+            return other.clone();
         }
+    }
+
+    pub fn div(&self, other: &Self) -> Self {
+        todo!()
     }
 
     fn length_without_leading_zeroes(&self) -> usize {
         for i in (0..self.body.len()).rev() {
-            if self.body[i] == 0 {
+            if self[i] == 0 {
                 continue;
             }
             return i;
@@ -71,7 +75,7 @@ impl PartialEq for Number {
             return false;
         }
         for i in 0..self.body.len().min(other.body.len()) {
-            if self.body[i] != other.body[i] {
+            if self[i] != other[i] {
                 return false;
             }
         }
@@ -86,7 +90,7 @@ impl PartialEq for Number {
 impl PartialOrd for Number {
     fn gt(&self, other: &Self) -> bool {
         if self.positive != other.positive {
-            return self.positive; 
+            return self.positive;
         }
         if self.length_without_leading_zeroes() < other.length_without_leading_zeroes() {
             return false;
@@ -95,10 +99,10 @@ impl PartialOrd for Number {
             return true;
         }
         for i in (0..self.body.len().min(other.body.len())).rev() {
-            if self.body[i] < other.body[i] {
+            if self[i] < other[i] {
                 return !self.positive;
             }
-            if self.body[i] > other.body[i] {
+            if self[i] > other[i] {
                 return self.positive;
             }
         }
@@ -107,7 +111,7 @@ impl PartialOrd for Number {
 
     fn ge(&self, other: &Self) -> bool {
         if self.positive != other.positive {
-            return self.positive; 
+            return self.positive;
         }
         if self.length_without_leading_zeroes() < other.length_without_leading_zeroes() {
             return false;
@@ -116,10 +120,10 @@ impl PartialOrd for Number {
             return true;
         }
         for i in (0..self.body.len().min(other.body.len())).rev() {
-            if self.body[i] < other.body[i] {
+            if self[i] < other[i] {
                 return !self.positive;
             }
-            if self.body[i] > other.body[i] {
+            if self[i] > other[i] {
                 return self.positive;
             }
         }
@@ -128,7 +132,7 @@ impl PartialOrd for Number {
 
     fn lt(&self, other: &Self) -> bool {
         if self.positive != other.positive {
-            return other.positive; 
+            return other.positive;
         }
         if self.length_without_leading_zeroes() > other.length_without_leading_zeroes() {
             return false;
@@ -138,10 +142,10 @@ impl PartialOrd for Number {
         }
         for i in (0..self.body.len().min(other.body.len())).rev() {
             dbg!(i);
-            if self.body[i] > other.body[i] {
+            if self[i] > other[i] {
                 return !self.positive;
             }
-            if self.body[i] < other.body[i] {
+            if self[i] < other[i] {
                 return self.positive;
             }
         }
@@ -150,7 +154,7 @@ impl PartialOrd for Number {
 
     fn le(&self, other: &Self) -> bool {
         if self.positive != other.positive {
-            return other.positive; 
+            return other.positive;
         }
         if self.length_without_leading_zeroes() > other.length_without_leading_zeroes() {
             return false;
@@ -159,19 +163,98 @@ impl PartialOrd for Number {
             return true;
         }
         for i in (0..self.body.len().min(other.body.len())).rev() {
-            if self.body[i] > other.body[i] {
+            if self[i] > other[i] {
                 return !self.positive;
             }
-            if self.body[i] < other.body[i] {
+            if self[i] < other[i] {
                 return self.positive;
             }
         }
         return true;
     }
 
-    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         todo!()
     }
+}
+
+impl std::ops::Add for Number {
+    fn add(self, rhs: Self) -> Self::Output {
+        let max_length = self
+            .length_without_leading_zeroes()
+            .max(rhs.length_without_leading_zeroes());
+
+        let (mut a, mut b) = (self.max(&rhs), self.min(&rhs));
+        let mut positive = true;
+        let mut subtract = false;
+        if !a.positive && !b.positive {
+            positive = false;
+            subtract = false;
+        } else if a.positive && !b.positive {
+            subtract = true;
+        } else if !a.positive && b.positive {
+            (a, b) = (b, a);
+            subtract = true;
+        } else { // Both positive
+        }
+
+        match (a.positive, b.positive) {
+            (false, false) => {
+                positive = false;
+                subtract = false;
+            }
+            (true, false) => {
+                subtract = true;
+            }
+            (false, true) => {
+                (a, b) = (b, a);
+                subtract = true;
+            }
+            (true, true) => { 
+                positive = true;
+                subtract = false;
+            }
+        }
+
+        let mut carry = 0;
+        let mut body = Vec::new();
+        for i in 0..max_length {
+            let mut result = (a[i] as i16) + (b[i] as i16) + carry;
+            let mut result = match subtract {
+                
+            }
+            if result > u8::MAX as i16 {
+                result = result - 256;
+                carry = 1;
+            }
+            let result = result as u8;
+            body.push(result)
+        }
+        if carry == 1 {
+            body.push(carry as u8);
+        }
+
+        Number {
+            body,
+            positive: true,
+        }
+    }
+
+    type Output = Self;
+}
+
+impl std::ops::Sub for Number {
+    fn sub(self, _rhs: Self) -> Self::Output {self}
+
+    type Output = Self;
+}
+
+impl Index<usize> for Number {
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.body[index]
+    }
+
+    type Output = u8;
 }
 
 impl std::fmt::Display for Number {
@@ -199,6 +282,9 @@ mod tests {
 
     #[test]
     fn length_without_leading_zeroes() {
-        assert_eq!(Number::from(0x1010i128).max(&Number::from(-1i128)), Number::from(0x1010i128));
+        assert_eq!(
+            Number::from(0x1010i128).max(&Number::from(-1i128)),
+            Number::from(0x1010i128)
+        );
     }
 }
