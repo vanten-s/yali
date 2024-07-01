@@ -70,15 +70,6 @@ fn mul_benchmark(c: &mut Criterion) {
             let _ = num.clone() * num;
         })
     });
-    group.bench_function(&format!("Old Multiplication with 1024 bits"), |b| {
-        b.iter(|| {
-            let mut rng = rand::thread_rng();
-            let one_char = || CHARSET[rng.gen_range(0..CHARSET.len())] as char;
-            let num: String = std::iter::repeat_with(one_char).take(256).collect();
-            let num: Number = num.parse().unwrap();
-            return num.clone().pow(num, &|a, b| a + b, 0.into(), false);
-        })
-    });
 }
 
 criterion_group!(benches, mul_benchmark);

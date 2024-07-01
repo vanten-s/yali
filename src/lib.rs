@@ -1,3 +1,7 @@
+#![doc = include_str!("../README.md")]
+
+/// A number that automatically allocates extra memory when it needs to, which means it can be as
+/// large as you want
 #[derive(Hash, Clone, PartialEq, Eq)]
 pub struct Number {
     body: Vec<u8>,
@@ -10,7 +14,14 @@ mod operations;
 #[cfg(test)]
 mod tests;
 
+impl Default for Number {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Number {
+    // Generates an new Number equal to 0;
     pub fn new() -> Self {
         Self { body: Vec::new() }
     }
@@ -98,44 +109,10 @@ impl Number {
         }
         length
     }
-
-    pub fn pow(
-        mut self,
-        mut rhs: Self,
-        function: &impl Fn(Number, Number) -> Number,
-        start: Number,
-        _debug: bool,
-    ) -> Number {
-        let mut result = start.clone();
-        let zero = 0.into();
-        while rhs > zero {
-            if _debug == true {
-                dbg!(&result);
-                dbg!(&self);
-                dbg!(&rhs);
-            }
-            if rhs.body[rhs.body.len() - 1] & 1 == 1 {
-                result = function(result, self.clone());
-            }
-            self = function(self.clone(), self);
-            rhs = rhs >> 1;
-            if _debug == true {
-                dbg!(&result);
-                dbg!(&self);
-                dbg!(&rhs);
-            }
-        }
-        if _debug == true {
-            dbg!(&result);
-            dbg!(&self);
-            dbg!(&rhs);
-        }
-
-        return result;
-    }
 }
 
 impl<T: Into<i128>> From<T> for Number {
+    /// Converts `value` to `Number`
     fn from(value: T) -> Self {
         let value: i128 = value.into();
         Self {

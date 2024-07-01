@@ -1,6 +1,8 @@
 use crate::Number;
 
 impl Number {
+    /// Calculates quotient and remainder
+    /// `divmod(a, b) -> (a / b, a % b)`
     pub fn divmod(self, rhs: Self) -> (Number, Number) {
         let mut quotient: Number = Number {
             body: self.body.iter().map(|_| 0).collect(),
