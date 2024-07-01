@@ -1,187 +1,165 @@
-use std::fmt::Write;
-
-#[derive(Clone)]
+#[derive(Hash, Clone, PartialEq, Eq)]
 pub struct Number {
     body: Vec<u8>,
-    positive: bool, // If the number is positive: true, if negative: false
 }
+
+mod comparisons;
+mod fromstr;
+mod operations;
+
+#[cfg(test)]
+mod tests;
 
 impl Number {
     pub fn new() -> Self {
+        Self { body: Vec::new() }
+    }
+
+    fn optimise(self) -> Self {
+        let total_length = self.body.len();
+
+        if self.body.len() == 0 {
+            return self;
+        }
+
+        if self.body[0] != 0 {
+            return self;
+        }
+
+        let mut active_length = 0;
+        for i in self.body.iter() {
+            if i != &0 {
+                break;
+            }
+            active_length += 1;
+        }
+
+        let start = active_length;
+        let end = total_length;
+
+        let body = self.body.get(start..end).unwrap_or(&[0]).to_owned();
+
+        return Self { body };
+    }
+
+    fn split_at(&self, index: usize) -> (Number, Number) {
+        if index > self.body.len() {
+            return (Number::new(), self.clone());
+        }
+
+        let body_len = self.body.len();
+        let split_point = body_len - index;
+
+        let mut high = vec![0; split_point];
+        let mut low = vec![0; index];
+
+        let mut i = 0;
+        while i < body_len {
+            if i < split_point {
+                high[i] = self.body[i];
+            } else {
+                low[i - split_point] = self.body[i];
+            }
+            i += 1;
+        }
+
+        let number_high = Number { body: high };
+        let number_low = Number { body: low };
+        return (number_high, number_low);
+    }
+
+    fn pad(mut self, amount: impl Into<isize> + Copy) -> Self {
+        self.body.reverse();
+
+        self.body.reserve(amount.into() as usize);
+        for _ in 0..amount.into() {
+            self.body.push(0);
+        }
+
+        self.body.reverse();
+
+        self
+    }
+
+    fn pad_back(mut self, amount: impl Into<isize> + Copy) -> Self {
+        self.body.reserve(amount.into() as usize);
+        for _ in 0..amount.into() {
+            self.body.push(0);
+        }
+        self
+    }
+
+    fn num_bits(&self) -> usize {
+        let length = (self.body.len() - 1) * 8;
+        for i in (0..8).rev() {
+            if self.body[0] & (1 << i) != 0 {
+                return length + i + 1;
+            }
+        }
+        length
+    }
+
+    pub fn pow(
+        mut self,
+        mut rhs: Self,
+        function: &impl Fn(Number, Number) -> Number,
+        start: Number,
+        _debug: bool,
+    ) -> Number {
+        let mut result = start.clone();
+        let zero = 0.into();
+        while rhs > zero {
+            if _debug == true {
+                dbg!(&result);
+                dbg!(&self);
+                dbg!(&rhs);
+            }
+            if rhs.body[rhs.body.len() - 1] & 1 == 1 {
+                result = function(result, self.clone());
+            }
+            self = function(self.clone(), self);
+            rhs = rhs >> 1;
+            if _debug == true {
+                dbg!(&result);
+                dbg!(&self);
+                dbg!(&rhs);
+            }
+        }
+        if _debug == true {
+            dbg!(&result);
+            dbg!(&self);
+            dbg!(&rhs);
+        }
+
+        return result;
+    }
+}
+
+impl<T: Into<i128>> From<T> for Number {
+    fn from(value: T) -> Self {
+        let value: i128 = value.into();
         Self {
-            body: Vec::new(),
-            positive: true,
+            body: value.to_be_bytes().to_vec(),
         }
-    }
-
-    pub fn max(&self, other: &Self) -> Self {
-        if self >= other {
-            return self.clone()
-        } else {
-            return other.clone()
-        }
-    }
-
-    pub fn min(&self, other: &Self) -> Self {
-        if self <= other {
-            return self.clone()
-        } else {
-            return other.clone()
-        }
-    }
-
-    fn length_without_leading_zeroes(&self) -> usize {
-        for i in (0..self.body.len()).rev() {
-            if self.body[i] == 0 {
-                continue;
-            }
-            return i;
-        }
-        return 0;
-    }
-}
-
-impl From<i128> for Number {
-    fn from(value: i128) -> Self {
-        Self {
-            body: value.abs().to_le_bytes().to_vec(),
-            positive: value > 0,
-        }
-    }
-}
-
-impl From<u128> for Number {
-    fn from(value: u128) -> Self {
-        Self {
-            body: value.to_le_bytes().to_vec(),
-            positive: true,
-        }
-    }
-}
-
-impl From<usize> for Number {
-    fn from(value: usize) -> Self {
-        Self::from(value as u128)
-    }
-}
-
-impl PartialEq for Number {
-    fn eq(&self, other: &Self) -> bool {
-        if self.length_without_leading_zeroes() != other.length_without_leading_zeroes() {
-            return false;
-        }
-        for i in 0..self.body.len().min(other.body.len()) {
-            if self.body[i] != other.body[i] {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    fn ne(&self, other: &Self) -> bool {
-        return !(self == other);
-    }
-}
-
-impl PartialOrd for Number {
-    fn gt(&self, other: &Self) -> bool {
-        if self.positive != other.positive {
-            return self.positive; 
-        }
-        if self.length_without_leading_zeroes() < other.length_without_leading_zeroes() {
-            return false;
-        }
-        if self.length_without_leading_zeroes() > other.length_without_leading_zeroes() {
-            return true;
-        }
-        for i in (0..self.body.len().min(other.body.len())).rev() {
-            if self.body[i] < other.body[i] {
-                return !self.positive;
-            }
-            if self.body[i] > other.body[i] {
-                return self.positive;
-            }
-        }
-        return false;
-    }
-
-    fn ge(&self, other: &Self) -> bool {
-        if self.positive != other.positive {
-            return self.positive; 
-        }
-        if self.length_without_leading_zeroes() < other.length_without_leading_zeroes() {
-            return false;
-        }
-        if self.length_without_leading_zeroes() > other.length_without_leading_zeroes() {
-            return true;
-        }
-        for i in (0..self.body.len().min(other.body.len())).rev() {
-            if self.body[i] < other.body[i] {
-                return !self.positive;
-            }
-            if self.body[i] > other.body[i] {
-                return self.positive;
-            }
-        }
-        return true;
-    }
-
-    fn lt(&self, other: &Self) -> bool {
-        if self.positive != other.positive {
-            return other.positive; 
-        }
-        if self.length_without_leading_zeroes() > other.length_without_leading_zeroes() {
-            return false;
-        }
-        if self.length_without_leading_zeroes() < other.length_without_leading_zeroes() {
-            return true;
-        }
-        for i in (0..self.body.len().min(other.body.len())).rev() {
-            dbg!(i);
-            if self.body[i] > other.body[i] {
-                return !self.positive;
-            }
-            if self.body[i] < other.body[i] {
-                return self.positive;
-            }
-        }
-        return false;
-    }
-
-    fn le(&self, other: &Self) -> bool {
-        if self.positive != other.positive {
-            return other.positive; 
-        }
-        if self.length_without_leading_zeroes() > other.length_without_leading_zeroes() {
-            return false;
-        }
-        if self.length_without_leading_zeroes() < other.length_without_leading_zeroes() {
-            return true;
-        }
-        for i in (0..self.body.len().min(other.body.len())).rev() {
-            if self.body[i] > other.body[i] {
-                return !self.positive;
-            }
-            if self.body[i] < other.body[i] {
-                return self.positive;
-            }
-        }
-        return true;
-    }
-
-    fn partial_cmp(&self, _other: &Self) -> Option<std::cmp::Ordering> {
-        todo!()
+        .optimise()
     }
 }
 
 impl std::fmt::Display for Number {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("0x")?;
-        if !self.positive {
-            f.write_char('-')?;
+        for i in self.body.iter() {
+            f.write_str(&format!(" {i:02x}"))?;
         }
-        for i in self.body.iter().rev() {
-            f.write_str(&format!("{i:x}"))?;
+        Ok(())
+    }
+}
+
+impl std::fmt::Binary for Number {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("0b")?;
+        for i in self.body.iter() {
+            f.write_str(&format!(" {i:08b}"))?;
         }
         Ok(())
     }
@@ -190,15 +168,5 @@ impl std::fmt::Display for Number {
 impl std::fmt::Debug for Number {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!("{self}"))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::Number;
-
-    #[test]
-    fn length_without_leading_zeroes() {
-        assert_eq!(Number::from(0x1010i128).max(&Number::from(-1i128)), Number::from(0x1010i128));
     }
 }
