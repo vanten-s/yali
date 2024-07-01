@@ -2,7 +2,7 @@ use std::{str::FromStr, time::Duration};
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use rand::Rng;
-use yet_another_largeint::*;
+use yali::*;
 
 fn operations_benchmark(c: &mut Criterion) {
     let mut group = c.benchmark_group("decryption");
