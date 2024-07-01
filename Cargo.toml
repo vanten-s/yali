@@ -9,6 +9,7 @@ repository = "https://github.com/vanten-s/yali"
 readme = "README.md"
 keywords = ["number", "large", "modexp"]
 categories = ["cryptography", "mathematics", "data-structures", "algorithms"]
+include = ["src/*", "Cargo.toml"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
