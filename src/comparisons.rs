@@ -1,6 +1,6 @@
 use crate::Number;
 
-impl PartialOrd for Number {
+impl<const N: usize> PartialOrd for Number<N> {
     fn gt(&self, other: &Self) -> bool {
         if self.body.len() < other.body.len() {
             return false;
@@ -46,7 +46,7 @@ impl PartialOrd for Number {
     }
 }
 
-impl Ord for Number {
+impl<const N: usize> Ord for Number<N> {
     fn max(self, other: Self) -> Self {
         if self >= other {
             return self;

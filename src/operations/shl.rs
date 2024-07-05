@@ -2,23 +2,25 @@ use std::ops::Shl;
 
 use crate::Number;
 
-impl Shl<u128> for Number {
+impl<const N: usize> Shl<u128> for Number<N> {
     fn shl(mut self, rhs: u128) -> Self::Output {
-        self.body.reverse();
-        self = self.pad_back((rhs as isize >> 3) + 1);
-        self.body = self.body.iter().map(|x| x.reverse_bits()).collect();
+        let mut index = 0;
+        while index < rhs {
+            let mut carry = 0;
+            for index in (0..N).rev() {
+                self.body[index] = self.body[index].rotate_left(1);
+                let carry_next = self.body[index] & 0b1;
+                if carry > 0 {
+                    self.body[index] = self.body[index] | 0b1;
+                } else {
+                    self.body[index] = self.body[index] & (u64::MAX - 1);
+                }
+                carry = carry_next
+            }
 
-        let len_begin = self.body.len() as isize;
-
-        self = self >> rhs;
-
-        let len_after = self.body.len() as isize;
-        self = self.pad(len_begin - len_after);
-
-        self.body = self.body.iter().map(|x| x.reverse_bits()).collect();
-        self.body.reverse();
-
-        self.optimise()
+            index += 1;
+        }
+        return self;
     }
 
     type Output = Self;

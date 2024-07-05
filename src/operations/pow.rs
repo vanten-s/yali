@@ -2,45 +2,45 @@ use std::ops::{BitXor, Mul};
 
 use crate::Number;
 
-impl BitXor for Number {
+impl<const N: usize> BitXor for Number<N> {
     fn bitxor(self, rhs: Self) -> Self::Output {
-        self.pow(rhs, &Self::mul, 1.into(), false)
+        self.pow(rhs, &Self::mul, 1u16.into(), false)
     }
 
     type Output = Self;
 }
 
-impl Number {
+impl<const N: usize> Number<N> {
     pub(in crate::operations) fn pow(
         mut self,
         mut rhs: Self,
-        function: &impl Fn(Number, Number) -> Number,
-        start: Number,
+        function: &impl Fn(Self, Self) -> Self,
+        start: Self,
         _debug: bool,
-    ) -> Number {
-        let mut result = start.clone();
-        let zero = 0.into();
+    ) -> Self {
+        let mut result = start;
+        let zero = 0u16.into();
         while rhs > zero {
-            if _debug == true {
-                dbg!(&result);
-                dbg!(&self);
-                dbg!(&rhs);
-            }
             if rhs.body[rhs.body.len() - 1] & 1 == 1 {
-                result = function(result, self.clone());
+                if _debug {
+                    dbg!(result);
+                    dbg!(self);
+                }
+                result = function(result, self);
+                if _debug {
+                    println!("=");
+                    dbg!(result);
+                }
             }
-            self = function(self.clone(), self);
+            if _debug {
+                dbg!(self);
+            }
+            self = function(self, self);
+            if _debug {
+                println!("=");
+                dbg!(self);
+            }
             rhs = rhs >> 1;
-            if _debug == true {
-                dbg!(&result);
-                dbg!(&self);
-                dbg!(&rhs);
-            }
-        }
-        if _debug == true {
-            dbg!(&result);
-            dbg!(&self);
-            dbg!(&rhs);
         }
 
         return result;
