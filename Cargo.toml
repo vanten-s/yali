@@ -5,6 +5,7 @@ edition = "2021"
 license-file = "LICENSE"
 description = "Yet Another LargeInt Library"
 homepage = "https://github.com/vanten-s/yali"
+documentation = "https://docs.rs/yali/"
 repository = "https://github.com/vanten-s/yali"
 readme = "README.md"
 keywords = ["number", "large", "modexp"]
