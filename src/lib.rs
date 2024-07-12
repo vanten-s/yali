@@ -58,7 +58,7 @@ impl<const N: usize> std::fmt::Binary for Number<N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("0b")?;
         for i in self.body.iter() {
-            f.write_str(&format!(" {i:08b}"))?;
+            f.write_str(&format!(" {i:064b}"))?;
         }
         Ok(())
     }
