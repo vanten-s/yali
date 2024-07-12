@@ -4,6 +4,7 @@ use crate::Number;
 
 impl<const N: usize> FromStr for Number<N> {
     fn from_str(s: &str) -> Result<Self, ParseIntError> {
+        let s = s.to_lowercase();
         let mut s = s.replace(|a| !"0123456789abcdef".contains(a), "");
 
         while s.len() % 16 != 0 {
