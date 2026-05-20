@@ -7,10 +7,12 @@ impl<const N: usize> Sub for Number<N> {
         let max = self;
         let min = rhs;
 
+        /*
         if min > max {
-            dbg!(&min, &max);
+            dbg!(&max, &min);
             panic!("Subtraction overflow :exploding_head:");
         }
+        */
 
         let mut body = [0; N];
         let mut carry = 0i128;
@@ -45,3 +47,5 @@ impl<const N: usize> Sub for Number<N> {
 
     type Output = Self;
 }
+
+

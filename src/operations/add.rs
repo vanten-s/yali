@@ -16,7 +16,7 @@ impl<const N: usize> AddAssign for Number<N> {
         let mut carry = 0;
         let mut index = N;
         let mut max_length = std::cmp::max(self.get_body_length(), rhs.get_body_length()) + 1;
-        
+
         if max_length > N {
             max_length = N;
         } 

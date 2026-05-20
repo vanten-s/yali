@@ -2,17 +2,12 @@ use std::ops::Shr;
 
 use crate::Number;
 
-impl<const N: usize> Shr<u128> for Number<N> {
-    fn shr(mut self, rhs: u128) -> Self::Output {
-        if rhs & 0b111111 == 0 {
-            let mut index = 0;
-            while index < rhs {
-                let mut n = N - 1;
-                while n > 0 {
-                    n -= 1;
-                    self.body[n + 1] = self.body[n];
-                }
-                index += 64;
+impl<const N: usize> Shr<usize> for Number<N> {
+    fn shr(mut self, rhs: usize) -> Self::Output {
+        if rhs & 63 == 0 {
+            self.body.rotate_right(rhs / 64);
+            for i in 0..rhs/64 {
+                self.body[i] = 0;
             }
             return self;
         }

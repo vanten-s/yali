@@ -7,10 +7,11 @@ impl<const N: usize> Number<N> {
         let mut quotient = Number { body: [0; N] };
         let mut remainder = Number { body: [0; N] };
 
+        let mut a = 1 << 63;
         for j in 0..(64 * N) {
             remainder = remainder << 1;
 
-            if self.body[j >> 6] & (1 << (63 - (j % 64))) != 0 {
+            if self.body[j >> 6] & a != 0 {
                 remainder.body[N - 1] |= 1;
             } else {
                 remainder.body[N - 1] &= u64::MAX - 1;
@@ -18,7 +19,11 @@ impl<const N: usize> Number<N> {
 
             if remainder >= rhs {
                 remainder = remainder - rhs;
-                quotient.body[j >> 6] |= 1 << (63 - (j % 64));
+                quotient.body[j >> 6] |= a;
+            }
+            a >>= 1;
+            if a == 0 {
+                a = 1 << 63;
             }
         }
 

@@ -2,8 +2,16 @@ use std::ops::Shl;
 
 use crate::Number;
 
-impl<const N: usize> Shl<u128> for Number<N> {
-    fn shl(mut self, rhs: u128) -> Self::Output {
+impl<const N: usize> Shl<usize> for Number<N> {
+    fn shl(mut self, rhs: usize) -> Self::Output {
+        if rhs & 63 == 0 {
+            self.body.rotate_left(rhs/64);
+            for i in (N-rhs/64)..N {
+                self.body[i] = 0;
+            }
+            return self;
+        }
+
         let mut index = 0;
         while index < rhs {
             let mut carry = 0;

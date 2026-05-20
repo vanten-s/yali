@@ -46,6 +46,23 @@ impl<const N: usize> PartialOrd for Number<N> {
     }
 }
 
+impl<const N: usize> PartialEq for Number<N> {
+    fn eq(&self, other: &Self) -> bool {
+        for i in 0..N {
+            if self.body[i] != other.body[i] {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    fn ne(&self, other: &Self) -> bool {
+        return !self.eq(other);
+    }
+}
+
+impl<const N: usize> Eq for Number<N> { }
+
 impl<const N: usize> Ord for Number<N> {
     fn max(self, other: Self) -> Self {
         if self >= other {

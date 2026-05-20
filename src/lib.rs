@@ -2,7 +2,7 @@
 
 /// A number that automatically allocates extra memory when it needs to, which means it can be as
 /// large as you want
-#[derive(Hash, Clone, Copy, PartialEq, Eq)]
+#[derive(Hash, Clone, Copy)]
 pub struct Number<const N: usize> {
     body: [u64; N],
 }
@@ -34,12 +34,28 @@ impl<const N: usize> Number<N> {
     }
 }
 
-impl<T: Into<u64>, const N: usize> From<T> for Number<N> {
+impl<const N: usize> From<[u64; N]> for Number<N> {
     /// Converts `value` to `Number`
-    fn from(value: T) -> Self {
-        let value = value.into();
+    fn from(body: [u64; N]) -> Self {
+        Self { body }
+    }
+}
+
+impl<const N: usize> From<u64> for Number<N> {
+    /// Converts `value` to `Number`
+    fn from(value: u64) -> Self {
         let mut body = [0; N];
         body[N - 1] = value;
+        Self { body }
+    }
+}
+
+impl<const N: usize> From<u128> for Number<N> {
+    /// Converts `value` to `Number`
+    fn from(value: u128) -> Self {
+        let mut body = [0; N];
+        body[N - 1] = value as u64;
+        body[N - 2] = (value >> 64) as u64;
         Self { body }
     }
 }
@@ -69,3 +85,7 @@ impl<const N: usize> std::fmt::Debug for Number<N> {
         f.write_str(&format!("{self}"))
     }
 }
+
+
+
+

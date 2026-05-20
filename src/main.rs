@@ -19,4 +19,13 @@ fn main() {
     dbg!(&decrypted);
 
     assert_eq!(message, decrypted);
+
+    /*let public_key = "70eda7562394183906c08eba1777796e8548c7dca7562394183631232";
+    let secret_key = "9c08eba00b3fbf1f77fdf7075ff1aabcd1234b65a7562394183123122";
+    let public_key: Number<32> = public_key.parse().unwrap();
+    let secret_key: Number<32> = secret_key.parse().unwrap();
+
+    assert_eq!(dbg!(public_key).mul_back(dbg!(secret_key), 2), public_key * secret_key);*/
 }
+
+
